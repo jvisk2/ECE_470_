@@ -1,0 +1,11 @@
+This README will explain how we set up the inverse kinematics code that we used to produce our YouTube video for Project Update 3.
+
+First, we pulled in the base UR3 robot, a Baxter vacuum gripper, and a primitive sphere from the provided files. We then assembled the gripper onto the UR3 arm using CTRL+click and the assembly button in V-Rep. The sphere was located at an arbitrary point in the UR3's action space.
+
+Next, we added a dummy for the tip of the gripper. We linked it to the gripper and used the position in the parent's frame to specify that the dummy should be 2 mm in the negative z-direction from the base of the gripper. This positioning allowed us to just barely touch the ball with the gripper, allowing for suction to occur.
+
+Next, we added a dummy for the position of the ball (target). This dummy was positioned on the top surface of the ball (8 mm in the positive z-direction from the origin of the ball). We then linked the tip dummy to the target dummy in the dummy dialogue menu. 
+
+Next, we built the inverse kinematics function that would be controlling how our robot moved in order to get the tip to the target. We added an inverse kinematics group under the kinematics tab in the calculation model properties window. We specified the tip dummy as the only element in the group and specified that its base was the UR3 arm itself. We then set the calculation method to DLS and the damping to 0.5, allowing more stable inverse kinematics calculations. The DLS mode was very helpful as it factors in the break points of the robot as well as joint angle boundary conditions.
+
+Finally, we allowed the simulation to run and noticed that while the inverse kinematics ran, the gripper never picked up the ball. This was solved by setting the gripper state to active in the init function of the gripper's child script. This ensured that whenever the gripper encountered a surface, it would immediately grip and hold.
