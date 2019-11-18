@@ -144,6 +144,16 @@ vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',1, vrep.simx_opmode
 
     
 Goal_joint_angles = np.array([[-0.5*np.pi,0,0,0,0,0],[-0.5*np.pi,-0.5*np.pi,-0.5*np.pi,0,-0.5*np.pi,0]])
+#Alternate goal joint angles:
+#np.array([[-0.5*np.pi,0,0,0,0,0],[-0.5*np.pi,-0.5*np.pi,-0.5*np.pi,0,-0.5*np.pi,0]]) #Acceleration Limit = 20
+#np.array([[-0.5*np.pi,0,0,0,0,-0.5*np.pi],[-0.5*np.pi,-0.5*np.pi,0,0,0,-0.5*np.pi]])
+
+#vrep.simxSetJointTargetVelocity(clientID, joint_one_handle, np.pi/2, vrep.simx_opmode_streaming)
+#vrep.simxSetJointTargetVelocity(clientID, joint_two_handle, np.pi/2, vrep.simx_opmode_streaming)
+#vrep.simxSetJointTargetVelocity(clientID, joint_three_handle, np.pi/2, vrep.simx_opmode_streaming)
+#vrep.simxSetJointTargetVelocity(clientID, joint_four_handle, np.pi/2, vrep.simx_opmode_streaming)
+#vrep.simxSetJointTargetVelocity(clientID, joint_five_handle, np.pi/2, vrep.simx_opmode_streaming)
+#vrep.simxSetJointTargetVelocity(clientID, joint_six_handle, np.pi/2, vrep.simx_opmode_streaming)
 
 for i in range(len(Goal_joint_angles)):
         time.sleep(0.5)
@@ -156,19 +166,29 @@ xAccel=vrep.simxGetFloatSignal(clientID,'accelerometerX',vrep.simx_opmode_stream
 yAccel=vrep.simxGetFloatSignal(clientID,'accelerometerY',vrep.simx_opmode_streaming)
 zAccel=vrep.simxGetFloatSignal(clientID,'accelerometerZ',vrep.simx_opmode_streaming)
 
+ballVelX=vrep.simxGetFloatSignal(clientID,'gyroX',vrep.simx_opmode_streaming)
+ballVelY=vrep.simxGetFloatSignal(clientID,'gyroY',vrep.simx_opmode_streaming)
+ballVelZ=vrep.simxGetFloatSignal(clientID,'gyroZ',vrep.simx_opmode_streaming)
+
 hold = True
 while(hold):
 
     xAccel=vrep.simxGetFloatSignal(clientID,'accelerometerX',vrep.simx_opmode_buffer)
     yAccel=vrep.simxGetFloatSignal(clientID,'accelerometerY',vrep.simx_opmode_buffer)
     zAccel=vrep.simxGetFloatSignal(clientID,'accelerometerZ',vrep.simx_opmode_buffer)
+    ballVelX=vrep.simxGetFloatSignal(clientID,'gyroX',vrep.simx_opmode_streaming)
+    ballVelY=vrep.simxGetFloatSignal(clientID,'gyroY',vrep.simx_opmode_streaming)
+    ballVelZ=vrep.simxGetFloatSignal(clientID,'gyroZ',vrep.simx_opmode_streaming)
     if(xAccel[0] == 1 or yAccel[0] == 1 or zAccel[0] == 1):
         print("Error")
         continue
-    print(xAccel, " ", yAccel, " ", zAccel)
-    if ((xAccel[1]**2+yAccel[1]**2+zAccel[1]**2)**0.5 < 20):
+    print("Acceleration: ",xAccel, " ", yAccel, " ", zAccel)
+    print("Ball Velocity: ",ballVelX, " ", ballVelY, " ", ballVelZ)
+    if ((xAccel[1]**2+yAccel[1]**2+zAccel[1]**2)**0.5 < 21):
         vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',0, vrep.simx_opmode_oneshot)
         print("Throw!")
+        ballVel = (ballVelX[1]**2+ballVelY[1]**2+ballVelZ[1]**2)**0.5
+        print("Ball velocity at Throw: ",ballVel)
         hold = False
 # Wait two seconds
 time.sleep(2)
