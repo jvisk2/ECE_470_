@@ -58,6 +58,28 @@ def SetJointPosition(theta):
 	vrep.simxSetJointTargetPosition(clientID, joint_six_handle, theta[5], vrep.simx_opmode_oneshot)
 	#time.sleep(0.5)
 
+# Function that used to move joints
+def SetJointVelocity():
+    vel = 0.5
+    o = vrep.simxSetJointTargetVelocity(clientID, joint_one_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+    o = vrep.simxSetJointTargetVelocity(clientID, joint_two_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+    o=vrep.simxSetJointTargetVelocity(clientID, joint_three_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+    o=vrep.simxSetJointTargetVelocity(clientID, joint_four_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+    o=vrep.simxSetJointTargetVelocity(clientID, joint_five_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+    o=vrep.simxSetJointTargetVelocity(clientID, joint_six_handle, vel, vrep.simx_opmode_blocking)
+	#time.sleep(0.5)
+    print(o)
+
 # Function that used to read joint angles
 def GetJointAngle():
 	result, theta1 = vrep.simxGetJointPosition(clientID, joint_one_handle, vrep.simx_opmode_blocking)
@@ -82,7 +104,6 @@ def GetJointAngle():
 	return theta
 
 
-
 # ======================================================================================================= #
 # ======================================= Start Simulation ============================================== #
 # ======================================================================================================= #
@@ -103,94 +124,89 @@ result,joint_name,intData,floatData,stringData = vrep.simxGetObjectGroupData(cli
 
 
 # Get "handle" to the base of robot
-result, base_handle = vrep.simxGetObjectHandle(clientID, 'UR3_link1_visible', vrep.simx_opmode_blocking)
+result, base_handle = vrep.simxGetObjectHandle(clientID, 'UR5_link1_visible', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for base frame')
     
+    
+
 # Get "handle" to the all joints of robot
-result, joint_one_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint1', vrep.simx_opmode_blocking)
+result, joint_one_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint1', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for first joint')
-result, joint_two_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint2', vrep.simx_opmode_blocking)
+result, joint_two_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint2', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for second joint')
-result, joint_three_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint3', vrep.simx_opmode_blocking)
+result, joint_three_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint3', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for third joint')
-result, joint_four_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint4', vrep.simx_opmode_blocking)
+result, joint_four_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint4', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for fourth joint')
-result, joint_five_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint5', vrep.simx_opmode_blocking)
+result, joint_five_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint5', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for fifth joint')
-result, joint_six_handle = vrep.simxGetObjectHandle(clientID, 'UR3_joint6', vrep.simx_opmode_blocking)
+result, joint_six_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint6', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for sixth joint')
 result, vacuum_cup_handle = vrep.simxGetObjectHandle(clientID, 'BaxterVacuumCup', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for vacuum cup')
 # Get "handle" to the end-effector of robot
-result, end_handle = vrep.simxGetObjectHandle(clientID, 'UR3_link7_visible', vrep.simx_opmode_blocking)
+result, end_handle = vrep.simxGetObjectHandle(clientID, 'UR5_link7_visible', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for end effector')
-# ==================================================================================================== #
+#==================================================================================================== #
+
+result, basket_handle = vrep.simxGetObjectHandle(clientID, 'Cup', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for Cup')
+
+result, sphere_handle = vrep.simxGetObjectHandle(clientID, 'Sphere', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for sphere')
 
 # Start simulation
 vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
 
 # ******************************** Your robot control code goes here  ******************************** #
 time.sleep(1)
+
+#Calculate Rotation of base joint
+a = vrep.simxGetObjectPosition(clientID, basket_handle, joint_one_handle, vrep.simx_opmode_blocking )
 vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',1, vrep.simx_opmode_oneshot)
-
+base_rot = np.arctan2(a[1][1], a[1][0]) + 0.5*np.pi
     
-Goal_joint_angles = np.array([[-0.5*np.pi,0,0,0,0,0],[-0.5*np.pi,-0.5*np.pi,-0.5*np.pi,0,-0.5*np.pi,0]])
-#Alternate goal joint angles:
-#np.array([[-0.5*np.pi,0,0,0,0,0],[-0.5*np.pi,-0.5*np.pi,-0.5*np.pi,0,-0.5*np.pi,0]]) #Acceleration Limit = 20
-#np.array([[-0.5*np.pi,0,0,0,0,-0.5*np.pi],[-0.5*np.pi,-0.5*np.pi,0,0,0,-0.5*np.pi]])
 
-#vrep.simxSetJointTargetVelocity(clientID, joint_one_handle, np.pi/2, vrep.simx_opmode_streaming)
-#vrep.simxSetJointTargetVelocity(clientID, joint_two_handle, np.pi/2, vrep.simx_opmode_streaming)
-#vrep.simxSetJointTargetVelocity(clientID, joint_three_handle, np.pi/2, vrep.simx_opmode_streaming)
-#vrep.simxSetJointTargetVelocity(clientID, joint_four_handle, np.pi/2, vrep.simx_opmode_streaming)
-#vrep.simxSetJointTargetVelocity(clientID, joint_five_handle, np.pi/2, vrep.simx_opmode_streaming)
-#vrep.simxSetJointTargetVelocity(clientID, joint_six_handle, np.pi/2, vrep.simx_opmode_streaming)
+#SetJointVelocity()
 
+Goal_joint_angles = np.array([[base_rot,0,0,0,np.pi,0],[base_rot,0,0.5*np.pi,0,np.pi,0],[base_rot,0,-0.5*np.pi,0,np.pi,0]])
 for i in range(len(Goal_joint_angles)):
-        time.sleep(0.5)
-
+        time.sleep(1.5)
         SetJointPosition(Goal_joint_angles[i])
     
-time.sleep(0.15)
-        
-xAccel=vrep.simxGetFloatSignal(clientID,'accelerometerX',vrep.simx_opmode_streaming)
-yAccel=vrep.simxGetFloatSignal(clientID,'accelerometerY',vrep.simx_opmode_streaming)
-zAccel=vrep.simxGetFloatSignal(clientID,'accelerometerZ',vrep.simx_opmode_streaming)
-
-ballVelX=vrep.simxGetFloatSignal(clientID,'gyroX',vrep.simx_opmode_streaming)
-ballVelY=vrep.simxGetFloatSignal(clientID,'gyroY',vrep.simx_opmode_streaming)
-ballVelZ=vrep.simxGetFloatSignal(clientID,'gyroZ',vrep.simx_opmode_streaming)
-
+ret, lin, ang = vrep.simxGetObjectVelocity(clientID, sphere_handle, vrep.simx_opmode_streaming )
+posret, pos = vrep.simxGetObjectPosition(clientID, sphere_handle, -1, vrep.simx_opmode_streaming ) 
+ret, j2Pos = vrep.simxGetJointPosition(clientID, joint_three_handle, vrep.simx_opmode_streaming)
 hold = True
-while(hold):
 
-    xAccel=vrep.simxGetFloatSignal(clientID,'accelerometerX',vrep.simx_opmode_buffer)
-    yAccel=vrep.simxGetFloatSignal(clientID,'accelerometerY',vrep.simx_opmode_buffer)
-    zAccel=vrep.simxGetFloatSignal(clientID,'accelerometerZ',vrep.simx_opmode_buffer)
-    ballVelX=vrep.simxGetFloatSignal(clientID,'gyroX',vrep.simx_opmode_streaming)
-    ballVelY=vrep.simxGetFloatSignal(clientID,'gyroY',vrep.simx_opmode_streaming)
-    ballVelZ=vrep.simxGetFloatSignal(clientID,'gyroZ',vrep.simx_opmode_streaming)
-    if(xAccel[0] == 1 or yAccel[0] == 1 or zAccel[0] == 1):
-        print("Error")
-        continue
-    print("Acceleration: ",xAccel, " ", yAccel, " ", zAccel)
-    print("Ball Velocity: ",ballVelX, " ", ballVelY, " ", ballVelZ)
-    if ((xAccel[1]**2+yAccel[1]**2+zAccel[1]**2)**0.5 < 21):
+maxpos = 9999999
+while(hold):
+    posret, pos = vrep.simxGetObjectPosition(clientID, sphere_handle, -1, vrep.simx_opmode_buffer ) 
+    ret2, j2Pos = vrep.simxGetJointPosition(clientID, joint_three_handle, vrep.simx_opmode_buffer)
+
+    if abs(j2Pos) < maxpos and ret2 == 0:
+        maxpos = abs(j2Pos)
+
+    if abs(j2Pos) < 0.07 and ret2 == 0:
         vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',0, vrep.simx_opmode_oneshot)
         print("Throw!")
-        ballVel = (ballVelX[1]**2+ballVelY[1]**2+ballVelZ[1]**2)**0.5
-        print("Ball velocity at Throw: ",ballVel)
+        ret, lin, ang = vrep.simxGetObjectVelocity(clientID, sphere_handle, vrep.simx_opmode_buffer )
+        print(lin)
         hold = False
-# Wait two seconds
+    print(maxpos)
+    
+    # Wait two seconds
 time.sleep(2)
 # **************************************************************************************************** #
 
