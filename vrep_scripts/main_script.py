@@ -117,7 +117,6 @@ if clientID == -1:
 
 # ======================================== Setup "handle"  =========================================== #
 
-print("#########")
 # Print object name list
 result,joint_name,intData,floatData,stringData = vrep.simxGetObjectGroupData(clientID,vrep.sim_appobj_object_type,0,vrep.simx_opmode_blocking)
 #print(stringData)
@@ -176,19 +175,70 @@ time.sleep(1)
 a = vrep.simxGetObjectPosition(clientID, basket_handle, joint_one_handle, vrep.simx_opmode_blocking )
 vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',1, vrep.simx_opmode_oneshot)
 base_rot = np.arctan2(a[1][1], a[1][0]) + 0.5*np.pi
-    
+a2 = vrep.simxGetObjectPosition(clientID, basket_handle, joint_one_handle, vrep.simx_opmode_blocking )
 
+v = 1.487
+l1 = 0.425
+l2 = 0.47
+t = 0.49
+d0 = (a2[1][1]**2+a2[1][0]**2)**0.5
+
+table = []
+for i in range(-50,51):
+    theta = i*0.01*np.pi
+    y = t + l1*np.cos(theta) + l2
+    ti = np.sqrt((2.0*y)/9.81)
+    dist = v*ti - l1*sin(theta)
+    table.append((theta, dist))
+
+#print(table)
+#d = (a2[1][1]**2 + a2[1][0]**2)**0.5
+#theta1 = 2*np.arctan2((-1.0*l1 - np.sqrt(-1*d**2 + l1**2)),d)
+#print(theta1)
 #SetJointVelocity()
 
+#shot from the top
 Goal_joint_angles = np.array([[base_rot,0,0,0,np.pi,0],[base_rot,0,0.5*np.pi,0,np.pi,0],[base_rot,0,-0.5*np.pi,0,np.pi,0]])
+midPoint = 0
+
+chosen = None
+for t in table:
+    if t[1] - d0 < 0.03:
+        chosen = t[0]
+        break
+    
+#Goal_joint_angles = np.array([[base_rot,0,0,0,np.pi,0],[base_rot,-0.5*np.pi,np.pi,0,np.pi,0],[base_rot,-0.5*np.pi,0,0,np.pi,0]])
+#midPoint = 0.5*np.pi
+
+#Goal_joint_angles = np.array([[base_rot,0,0,0,np.pi,0],[base_rot,0.5*np.pi,0,0,np.pi,0],[base_rot,0.5*np.pi,-1.0*np.pi,0,np.pi,0]])
+#midPoint = -0.5*np.pi
+thetaS = 0.5*np.pi-chosen
+thetaE = thetaS - np.pi
+
+Goal_joint_angles = np.array([[base_rot,0,0,0,np.pi,0],[base_rot,chosen,thetaS,0,np.pi,0],[base_rot,chosen,thetaE,0,np.pi,0]])
+midPoint = thetaS - 0.5*np.pi
+
+
 for i in range(len(Goal_joint_angles)):
         time.sleep(1.5)
         SetJointPosition(Goal_joint_angles[i])
-    
+''' 
+print("#########")
+
+r, l1 = vrep.simxGetObjectPosition(clientID, joint_three_handle, joint_two_handle, vrep.simx_opmode_blocking  ) 
+if r==0:
+    print(l1)
+r, l2 = vrep.simxGetObjectPosition(clientID, sphere_handle, joint_three_handle, vrep.simx_opmode_blocking  ) 
+if r==0:
+    print(l2) 
+print("#########")
+'''
 ret, lin, ang = vrep.simxGetObjectVelocity(clientID, sphere_handle, vrep.simx_opmode_streaming )
 posret, pos = vrep.simxGetObjectPosition(clientID, sphere_handle, -1, vrep.simx_opmode_streaming ) 
 ret, j2Pos = vrep.simxGetJointPosition(clientID, joint_three_handle, vrep.simx_opmode_streaming)
 hold = True
+
+v=1.487
 
 maxpos = 9999999
 while(hold):
@@ -197,14 +247,16 @@ while(hold):
 
     if abs(j2Pos) < maxpos and ret2 == 0:
         maxpos = abs(j2Pos)
+        
 
-    if abs(j2Pos) < 0.07 and ret2 == 0:
+    if abs(j2Pos - midPoint) < 0.07 and ret2 == 0:
         vrep.simxSetIntegerSignal(clientID, 'BaxterVacuumCup_active',0, vrep.simx_opmode_oneshot)
         print("Throw!")
         ret, lin, ang = vrep.simxGetObjectVelocity(clientID, sphere_handle, vrep.simx_opmode_buffer )
         print(lin)
         hold = False
-    print(maxpos)
+        print(maxpos)
+    
     
     # Wait two seconds
 time.sleep(2)
